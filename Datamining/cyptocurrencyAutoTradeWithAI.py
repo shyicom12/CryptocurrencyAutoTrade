@@ -4,17 +4,18 @@ import datetime
 import schedule
 from fbprophet import Prophet
 
-access = "access key"
-secret = "secret key"
+#업비트 open API code
+access = "access key" # 본인 값으로 변경
+secret = "secret key" # 본인 값으로 변경
 
 def get_target_price(ticker, k):
-    """변동성 돌파 전략으로 매수 목표가 조회"""
+    """매수 목표가 조회"""
     df = pyupbit.get_ohlcv(ticker, interval="day", count=2)
     target_price = df.iloc[0]['close'] + (df.iloc[0]['high'] - df.iloc[0]['low']) * k
     return target_price
 
 def get_start_time(ticker):
-    """시작 시간 조회"""
+    """시작 시간"""
     df = pyupbit.get_ohlcv(ticker, interval="day", count=1)
     start_time = df.index[0]
     return start_time
@@ -36,7 +37,7 @@ def get_current_price(ticker):
 
 predicted_close_price = 0
 def predict_price(ticker):
-    """Prophet으로 당일 종가 가격 예측"""
+    """당일 종가 가격 예측"""
     global predicted_close_price
     df = pyupbit.get_ohlcv(ticker, interval="minute60")
     df = df.reset_index()
@@ -59,14 +60,15 @@ schedule.every().hour.do(lambda: predict_price("KRW-BTC"))
 upbit = pyupbit.Upbit(access, secret)
 print("autotrade start")
 
-# 자동매매 시작
+# 매매 시작
 while True:
     try:
         now = datetime.datetime.now()
-        start_time = get_start_time("KRW-BTC")
-        end_time = start_time + datetime.timedelta(days=1)
+        start_time = get_start_time("KRW-BTC") #오전 9시
+        end_time = start_time + datetime.timedelta(days=1) #오전9시 + 1일
         schedule.run_pending()
-
+        
+#09:00:00 ~ 08:59:50
         if start_time < now < end_time - datetime.timedelta(seconds=10):
             target_price = get_target_price("KRW-BTC", 0.5)
             current_price = get_current_price("KRW-BTC")
@@ -82,3 +84,5 @@ while True:
     except Exception as e:
         print(e)
         time.sleep(1)
+        
+        
